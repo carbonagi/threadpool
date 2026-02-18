@@ -14,7 +14,7 @@ ThreadPool::ThreadPool(size_t num)
 					std::function<void()> task;
 					{
 						std::unique_lock lk{ mutex_ };
-						cv_.wait(lk, stoken, [this, &stoken] {return !tasks_.empty() || stoken.stop_requested();});
+						cv_.wait(lk, stoken, [this] {return !tasks_.empty();});
 						if (stoken.stop_requested() && tasks_.empty())
 							return;
 						task = std::move(tasks_.front());
@@ -31,7 +31,6 @@ ThreadPool::~ThreadPool()
 {
 	for (auto& w : workers_)
 		w.request_stop();
-	cv_.notify_all();
 	// 需要在这里等待所有 worker 线程结束
 	// 避免其它成员变量在 worker 线程结束前销毁
 	for (auto& w : workers_)
