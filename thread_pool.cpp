@@ -20,7 +20,13 @@ ThreadPool::ThreadPool(size_t num)
 						task = std::move(tasks_.front());
 						tasks_.pop();
 					}
-					std::invoke(task);
+					try {
+						std::invoke(task);
+					} catch (const std::exception& e) {
+						// 记录日志
+						std::println("Exception in thread pool task: {}", e.what());
+						// TODO: 允许用户自定义异常处理机制，例如通过回调函数
+					}
 				}
 			}
 		);
